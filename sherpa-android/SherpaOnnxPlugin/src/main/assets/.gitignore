@@ -1,0 +1,9 @@
+*.onnx
+*.onnx.json
+tokens.txt
+MODEL_CARD
+
+espeak-ng-data
+
+vits-piper.py
+vits-piper.sh
