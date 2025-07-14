@@ -144,6 +144,15 @@ namespace SherpaUnityWrapper
             sherpaOnnx.Call("stop");
         }
 
+        public void SetOnCompleteAudioCallback(string gameObjectName, string methodName)
+        {
+            if (sherpaOnnx == null)
+            {
+                return;
+            }
+            sherpaOnnx.Call("setOnCompleteCallback", gameObjectName, methodName);
+        }
+
         /// <summary>
         /// Check if audio is stopped at the moment
         /// </summary>
@@ -188,6 +197,35 @@ namespace SherpaUnityWrapper
                 Debug.Log($"{DEBUG_NAME}: [IsPlaying]: isPlaying? {!isStopped}");
             }
             return !isStopped;
+        }
+
+        public void SetDebugMode(bool debugMode)
+        {
+            if (sherpaOnnx == null)
+            {
+                return;
+            }
+
+            if (debugMode)
+            {
+                Debug.Log($"{DEBUG_NAME}: [SetDebugMode]: Set debug mode: {debugMode}");
+            }
+            sherpaOnnx.Call("setDebugMode", debugMode);
+        }
+
+        public bool IsDebugMode()
+        {
+            if (sherpaOnnx == null)
+            {
+                return false;
+            }
+
+            bool isDebugMode = sherpaOnnx.Call<bool>("isDebugMode");
+            if (debugMode)
+            {
+                Debug.Log($"{DEBUG_NAME}: [IsDebugMode]: isDebugMode: {isDebugMode}");
+            }
+            return isDebugMode;
         }
 
         /// <summary>

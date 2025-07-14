@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import com.unity3d.player.UnityPlayer;
+
 public class SherpaOnnxTTSPlugin {
     public static final String TAG = "sherpa-onnx-tts-plugin (Java)";
     private OfflineTts tts = null;
@@ -22,6 +24,9 @@ public class SherpaOnnxTTSPlugin {
     private MediaPlayer mediaPlayer = null;
     private AudioTrack track = null;
     private Activity activity = null;
+    private String unityGameObjectName = "";
+    private String unityMethodName = "";
+    private boolean debugMode = false;
 
     public SherpaOnnxTTSPlugin() {
         Log.i(TAG, "calling SherpaOnnxTTSPlugin - constructor");
@@ -32,20 +37,37 @@ public class SherpaOnnxTTSPlugin {
     }
 
     public void initialize() {
-        Log.i(TAG, "Start to initialize TTS");
+        if (debugMode) {
+            Log.i(TAG, "Start to initialize TTS");
+        }
         initTts();
-        Log.i(TAG, "Finish initializing TTS");
+        if (debugMode) {
+            Log.i(TAG, "Finish initializing TTS");
+        }
 
-        Log.i(TAG, "Start to initialize AudioTrack");
+        if (debugMode) {
+            Log.i(TAG, "Start to initialize AudioTrack");
+        }
         initAudioTrack();
-        Log.i(TAG, "Finish initializing AudioTrack");
+        if (debugMode) {
+            Log.i(TAG, "Finish initializing AudioTrack");
+        }
 
         // TODO: This method should return a value or throw an error
         if (activity == null) {
-            Log.w(TAG, "Activity object is null!");
+            Log.e(TAG, "Activity object is null!");
             return;
         }
-        activity.runOnUiThread(() -> Log.i(TAG, "Sherpa ONNX TTS library initialized successfully."));
+        activity.runOnUiThread(() -> {
+            if (debugMode) {
+                Log.i(TAG, "Sherpa ONNX TTS library initialized successfully.");
+            }
+        });
+    }
+
+    public void setOnCompleteCallback(String gameObjectName, String methodName) {
+        this.unityGameObjectName = gameObjectName;
+        this.unityMethodName = methodName;
     }
 
     public void generateAndPlay(int speakerId, float speed, String text) {
@@ -88,8 +110,11 @@ public class SherpaOnnxTTSPlugin {
             boolean ok = audio.getSamples().length > 0 && audio.save(filename);
             if (ok) {
                 activity.runOnUiThread(() -> {
-                    Log.d(TAG, "Stop of the track (UI thread)");
                     track.stop();
+                    if (debugMode) {
+                        Log.i(TAG, "Trying to send a message to unity");
+                    }
+                    sendResultToUnity("stop");
                 });
             }
         }).start();
@@ -128,8 +153,18 @@ public class SherpaOnnxTTSPlugin {
         return stopped;
     }
 
+    public boolean isDebugMode() {
+        return debugMode;
+    }
+
+    public void setDebugMode(boolean debugMode) {
+        this.debugMode = debugMode;
+    }
+
     public void release() {
-        Log.i(TAG, "Releasing allocated memory");
+        if (debugMode) {
+            Log.i(TAG, "Releasing allocated memory");
+        }
         if (mediaPlayer != null) {
             mediaPlayer.release();
             mediaPlayer = null;
@@ -141,6 +176,17 @@ public class SherpaOnnxTTSPlugin {
         if (tts != null) {
             tts.release();
             tts = null;
+        }
+    }
+
+    private void sendResultToUnity(String message) {
+        if (unityGameObjectName != null && !unityGameObjectName.isEmpty() && unityMethodName != null && !unityMethodName.isEmpty()) {
+            if (debugMode) {
+                Log.i(TAG, "Sending stop message to unity");
+            }
+            UnityPlayer.UnitySendMessage(unityGameObjectName, unityMethodName, message);
+        } else {
+            Log.e(TAG, "Unity callback not set. Result cannot be sent.");
         }
     }
 
@@ -182,7 +228,9 @@ public class SherpaOnnxTTSPlugin {
                 AudioFormat.CHANNEL_OUT_MONO,
                 AudioFormat.ENCODING_PCM_FLOAT
         );
-        Log.i(TAG, "sampleRate: " + sampleRate + ", buffLength: " + bufLength);
+        if (debugMode) {
+            Log.i(TAG, "sampleRate: " + sampleRate + ", buffLength: " + bufLength);
+        }
 
         AudioAttributes attr = new AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                 .setUsage(AudioAttributes.USAGE_MEDIA)
@@ -213,7 +261,9 @@ public class SherpaOnnxTTSPlugin {
     }
 
     private String copyDataDir(String dataDir) {
-        Log.i(TAG, "data dir is " + dataDir);
+        if (debugMode) {
+            Log.i(TAG, "data dir is " + dataDir);
+        }
         copyAssets(dataDir);
 
         File f = this.activity.getExternalFilesDir(null);
@@ -222,7 +272,10 @@ public class SherpaOnnxTTSPlugin {
             return "";
         }
         String newDataDir = f.getAbsolutePath();
-        Log.i(TAG, "New data directory: " + newDataDir);
+        if (debugMode) {
+            Log.i(TAG, "New data directory: " + newDataDir);
+        }
+
         return newDataDir;
     }
 
