@@ -1,103 +1,123 @@
 @echo off
 setlocal
 
-rem --- Konfiguracja ---
-rem Sciezki do projektow
+rem --- Configuration ---
+rem Project Paths
 set ANDROID_PROJECT_PATH=sherpa-android
 set CSHARP_WRAPPER_PATH=sherpa-unity-wrapper
 
-rem Nazwa modulu biblioteki Android
+rem Android library module name
 set ANDROID_MODULE_NAME=SherpaOnnxPlugin
 
-rem Sciezki wyjsciowe
+rem !!! IMPORTANT: SET THE PATHS TO UNITY LIBRARIES !!!
+rem You might need to provide paths to multiple folders.
+rem Find your Unity Editor installation folder first.
+
+rem Path 1: Main managed libraries (UnityEngine.dll, UnityEditor.dll)
+rem Example: C:\Program Files\Unity\Hub\Editor\2022.3.5f1\Editor\Data\Managed
+set UNITY_MANAGED_PATH=C:\Program Files\Unity\Hub\Editor\2022.3.17f1\Editor\Data\Managed
+
+rem Path 2 (Optional): Platform-specific libraries, e.g., for Windows Standalone.
+rem Example: C:\Program Files\Unity\Hub\Editor\2022.3.5f1\Editor\Data\PlaybackEngines\windowsstandalonesupport\Managed
+set UNITY_PLATFORM_PATH=
+
+rem Output Paths
 set DIST_PATH=dist
 set DIST_ANDROID_PATH=%DIST_PATH%\Android
 set DIST_CSHARP_PATH=%DIST_PATH%
-rem --- Koniec Konfiguracji ---
+rem --- End of Configuration ---
 
 echo.
-echo [INFO] Tworzenie katalogow wyjsciowych...
+echo [INFO] Creating output directories...
 if not exist "%DIST_PATH%" mkdir "%DIST_PATH%"
 if not exist "%DIST_ANDROID_PATH%" mkdir "%DIST_ANDROID_PATH%"
-echo [INFO] Gotowe.
+echo [INFO] Done.
 echo.
 
 rem ==================================================================
-rem Budowanie biblioteki Android (.aar)
+rem Building Android Library (.aar)
 rem ==================================================================
-echo [INFO] Rozpoczynanie budowania modulu Android: %ANDROID_MODULE_NAME%...
+echo [INFO] Starting Android module build: %ANDROID_MODULE_NAME%...
 cd "%ANDROID_PROJECT_PATH%"
 
-rem Uruchomienie Gradle do wyczyszczenia i zbudowania modulu w wersji Release
 call gradlew :%ANDROID_MODULE_NAME%:clean :%ANDROID_MODULE_NAME%:assembleRelease
-
-rem Sprawdzenie, czy budowanie sie powiodlo
 if errorlevel 1 (
     echo.
-    echo [ERROR] Budowanie biblioteki Android nie powiodlo sie.
+    echo [ERROR] Android library build failed.
     cd ..
     exit /b 1
 )
-echo [INFO] Budowanie modulu Android zakonczone pomyslnie.
+echo [INFO] Android module built successfully.
 echo.
 
-echo [INFO] Kopiowanie pliku .aar do katalogu docelowego...
+echo [INFO] Copying .aar file to the destination directory...
 set AAR_SOURCE_PATH=%ANDROID_MODULE_NAME%\build\outputs\aar
-
-rem Przenies plik .aar do docelowego katalogu
 move /Y "%AAR_SOURCE_PATH%\*.aar" "..\%DIST_ANDROID_PATH%\" >nul
 if errorlevel 1 (
     echo.
-    echo [ERROR] Nie udalo sie przeniesc pliku .aar.
+    echo [ERROR] Failed to move the .aar file.
     cd ..
     exit /b 1
 )
-echo [INFO] Plik .aar zostal przeniesiony do %DIST_ANDROID_PATH%
+echo [INFO] The .aar file has been moved to %DIST_ANDROID_PATH%
 cd ..
 echo.
 
 rem ==================================================================
-rem Budowanie wrappera C# (.dll)
+rem Building C# Wrapper (.dll)
 rem ==================================================================
-echo [INFO] Rozpoczynanie budowania wrappera C#: %CSHARP_WRAPPER_PATH%...
+echo [INFO] Starting C# wrapper build: %CSHARP_WRAPPER_PATH%...
 cd "%CSHARP_WRAPPER_PATH%"
 
-rem Uzyj msbuild do zbudowania projektu w konfiguracji Release
-msbuild /p:Configuration=Release /nologo /v:q
-
-rem Sprawdzenie, czy budowanie sie powiodlo
-if errorlevel 1 (
+rem Checking if the main Unity libraries path is set
+if "%UNITY_MANAGED_PATH%"=="C:\Program Files\Unity\Hub\Editor\2022.3.17f1\Editor\Data\Managed" (
     echo.
-    echo [ERROR] Budowanie wrappera C# nie powiodlo sie.
+    echo [WARNING] The main Unity libraries path (UNITY_MANAGED_PATH) is not set!
+    echo [WARNING] Please edit the script and provide the correct path to continue.
+    echo.
     cd ..
     exit /b 1
 )
-echo [INFO] Budowanie C# zakonczone pomyslnie.
+
+rem Combine all provided paths into one variable for msbuild
+set "ALL_REFERENCE_PATHS=%UNITY_MANAGED_PATH%"
+if defined UNITY_PLATFORM_PATH (
+    if not "%UNITY_PLATFORM_PATH%"=="" set "ALL_REFERENCE_PATHS=%ALL_REFERENCE_PATHS%;%UNITY_PLATFORM_PATH%"
+)
+
+rem Use msbuild, providing all reference paths
+echo [INFO] Using combined reference paths: %ALL_REFERENCE_PATHS%
+msbuild /p:Configuration=Release /p:ReferencePath="%ALL_REFERENCE_PATHS%" /nologo /v:q
+
+if errorlevel 1 (
+    echo.
+    echo [ERROR] C# wrapper build failed. Check your UNITY_..._PATH variables.
+    cd ..
+    exit /b 1
+)
+echo [INFO] C# wrapper built successfully.
 echo.
 
-echo [INFO] Kopiowanie plikow .dll do katalogu docelowego...
-rem Sciezka, gdzie msbuild umieszcza pliki .dll w konfiguracji Release
+echo [INFO] Copying .dll files to the destination directory...
 set DLL_SOURCE_PATH=bin\Release
-
-rem Przenies pliki .dll do docelowego katalogu
 move /Y "%DLL_SOURCE_PATH%\*.dll" "..\%DIST_CSHARP_PATH%\" >nul
 if errorlevel 1 (
     echo.
-    echo [ERROR] Nie udalo sie przeniesc plikow .dll.
+    echo [ERROR] Failed to move the .dll files.
     cd ..
     exit /b 1
 )
-echo [INFO] Pliki .dll zostaly przeniesione do %DIST_CSHARP_PATH%
+echo [INFO] The .dll files have been moved to %DIST_CSHARP_PATH%
 cd ..
 echo.
 
 rem ==================================================================
-rem Podsumowanie
+rem Summary
 rem ==================================================================
-echo [SUCCESS] Skrypt zakonczyl dzialanie pomyslnie.
+echo [SUCCESS] The script finished successfully.
 echo.
-echo   -> Gotowy plik .aar znajduje sie w: %DIST_ANDROID_PATH%
-echo   -> Gotowe pliki .dll znajduja sie w: %DIST_CSHARP_PATH%
+echo   -> The final .aar file is located in: %DIST_ANDROID_PATH%
+echo   -> The final .dll files are located in: %DIST_CSHARP_PATH%
 echo.
 echo ==================================================================
 
