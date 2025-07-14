@@ -56,7 +56,6 @@ public class SherpaOnnxSTTPlugin {
             Log.i(TAG, "Start to initialize non-streaming recognizer");
         }
         initOfflineRecognizer();
-
         if (debugMode) {
             Log.i(TAG, "Finished initializing non-streaming recognizer");
         }
@@ -66,14 +65,6 @@ public class SherpaOnnxSTTPlugin {
         this.unityGameObjectName = gameObjectName;
         this.unityMethodName = methodName;
         this.unityErrorMethodName = errorMethodName;
-    }
-
-    private void sendErrorToUnity(String errorMessage) {
-        if (unityGameObjectName != null && !unityGameObjectName.isEmpty() && unityErrorMethodName != null && !unityErrorMethodName.isEmpty()) {
-            UnityPlayer.UnitySendMessage(unityGameObjectName, unityErrorMethodName, errorMessage);
-        } else {
-            Log.e(TAG, "Unity error callback not set. Error cannot be sent.");
-        }
     }
 
     public void startRecording() {
@@ -173,6 +164,22 @@ public class SherpaOnnxSTTPlugin {
         }
     }
 
+    private void sendErrorToUnity(String errorMessage) {
+        if (unityGameObjectName != null && !unityGameObjectName.isEmpty() && unityErrorMethodName != null && !unityErrorMethodName.isEmpty()) {
+            UnityPlayer.UnitySendMessage(unityGameObjectName, unityErrorMethodName, errorMessage);
+        } else {
+            Log.e(TAG, "Unity error callback not set. Error cannot be sent.");
+        }
+    }
+
+    private void sendResultToUnity(String message) {
+        if (unityGameObjectName != null && !unityGameObjectName.isEmpty() && unityMethodName != null && !unityMethodName.isEmpty()) {
+            UnityPlayer.UnitySendMessage(unityGameObjectName, unityMethodName, message);
+        } else {
+            Log.e(TAG, "Unity callback not set. Result cannot be sent.");
+        }
+    }
+
     private void processAudioStream(int minBufferSize) {
         ByteArrayOutputStream bufferStream = new ByteArrayOutputStream();
         short[] audioData = new short[minBufferSize / 2];
@@ -225,14 +232,6 @@ public class SherpaOnnxSTTPlugin {
                 sendErrorToUnity("Błąd podczas dekodowania: " + e.getMessage());
             }
         });
-    }
-
-    private void sendResultToUnity(String message) {
-        if (unityGameObjectName != null && !unityGameObjectName.isEmpty() && unityMethodName != null && !unityMethodName.isEmpty()) {
-            UnityPlayer.UnitySendMessage(unityGameObjectName, unityMethodName, message);
-        } else {
-            Log.e(TAG, "Unity callback not set. Result cannot be sent.");
-        }
     }
 
     private void initOfflineRecognizer() {
