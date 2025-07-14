@@ -135,6 +135,20 @@ namespace SherpaUnityWrapper
             sherpaOnnx.Call("stopRecording");
         }
 
+        public void SetDebugMode(bool debugMode)
+        {
+            if (sherpaOnnx == null)
+            {
+                return;
+            }
+
+            if (debugMode)
+            {
+                Debug.Log($"{DEBUG_NAME}: [SetDebugMode]: Set debug mode: {debugMode}");
+            }
+            sherpaOnnx.Call("setDebugMode", debugMode);
+        }
+
         /// <summary>
         /// Returns <c>true</c> if audio is currently being recorded
         /// </summary>
