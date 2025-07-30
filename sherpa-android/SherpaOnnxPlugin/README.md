@@ -6,7 +6,7 @@ I just rewrited the code for Java and better understanding (for me), so generall
 
 ## Additional libraries and models
 
-- ./libs/classes.jar - UnityPlayer classes from Unity ver. 2022.3.17f1
-- ./src/main/jniLibs/*.* - Sherpa .so libraries for different architecture
-- ./src/main/assets/*.* - here are models for TTS and STT
+- `./libs/classes.jar` - UnityPlayer classes from Unity ver. 2022.3.17f1
+- `./src/main/jniLibs/*.*` - Sherpa *.so libraries for different architecture (only `libonnxruntime.so` and `libsherpa-onnx-jni.so` are required)
+- `./src/main/assets/*.*` - here are models for TTS and STT
 
