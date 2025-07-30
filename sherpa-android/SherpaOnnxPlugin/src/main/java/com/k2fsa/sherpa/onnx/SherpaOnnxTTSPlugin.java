@@ -149,16 +149,57 @@ public class SherpaOnnxTTSPlugin {
         // TODO: this method should return a value
     }
 
-    public boolean isStopped() {
-        return stopped;
-    }
-
     public boolean isDebugMode() {
         return debugMode;
     }
 
     public void setDebugMode(boolean debugMode) {
         this.debugMode = debugMode;
+    }
+
+    public boolean isPlaying() {
+        boolean isTrackPlaying = track != null && track.getPlayState() == AudioTrack.PLAYSTATE_PLAYING;
+        boolean isMediaPlayerPlaying = false;
+        if (mediaPlayer != null) {
+            try {
+                isMediaPlayerPlaying = mediaPlayer.isPlaying();
+            } catch (IllegalStateException e) {
+                Log.w(TAG, "MediaPlayer in illegal state while checking isPlaying().");
+                isMediaPlayerPlaying = false;
+            }
+        }
+        return isTrackPlaying || isMediaPlayerPlaying;
+    }
+
+    /**
+     * Returns the duration of the audio file in milliseconds.
+     * @return duration in milliseconds
+     */
+    public int getDuration() {
+        String filename = this.activity.getFilesDir().getAbsolutePath() + "/generated.wav";
+        File audioFile = new File(filename);
+
+        if (!audioFile.exists()) {
+            if (debugMode) {
+                Log.w(TAG, "Cannot get duration. File not found: " + filename);
+            }
+            return 0;
+        }
+
+        MediaPlayer tempPlayer = new MediaPlayer();
+        int duration = 0;
+        try {
+            tempPlayer.setDataSource(filename);
+            tempPlayer.prepare();
+            duration = tempPlayer.getDuration();
+        } catch (IOException | IllegalStateException e) {
+            Log.e(TAG, "Failed to get duration from audio file.", e);
+            return 0;
+        } finally {
+            tempPlayer.release();
+        }
+
+        return duration;
     }
 
     public void release() {

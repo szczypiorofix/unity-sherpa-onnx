@@ -26,13 +26,20 @@ namespace SherpaUnityWrapper
         private bool debugMode = false;
 
         /// <summary>
-        /// Basic SherpaTTSWrapper constructor
+        /// Default constructor
+        /// </summary>
+        public SherpaTTSWrapper() : this(false) {}
+
+        /// <summary>
+        /// SherpaTTSWrapper constructor
         /// </summary>
         /// <remarks>
         /// Just for creating an object.
         /// </remarks>
-        public SherpaTTSWrapper()
+        public SherpaTTSWrapper(bool debugMode)
         {
+            this.debugMode = debugMode;
+
             if (debugMode)
             {
                 Debug.Log($"{DEBUG_NAME}: SherpaTTSWrapper constructor called.");
@@ -50,8 +57,7 @@ namespace SherpaUnityWrapper
                 unityPlayerClass = new AndroidJavaClass(UNITY_PLAYER_CLASS_NAME);
             } catch (Exception upcE)
             {
-                Debug.LogError($"{DEBUG_NAME}: [Initialize] An error occurred while creating AndroidJavaClass(${UNITY_PLAYER_CLASS_NAME})");
-                Debug.LogError($"{DEBUG_NAME}: [Initialize]: error content: {upcE}");
+                Debug.LogError($"{DEBUG_NAME}: [Initialize] An error occurred while creating AndroidJavaClass(${UNITY_PLAYER_CLASS_NAME}): {upcE}");
                 return;
             }
 
@@ -61,8 +67,7 @@ namespace SherpaUnityWrapper
                 unityCurrentActivityObject = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
             } catch (Exception ucaoE)
             {
-                Debug.LogError($"{DEBUG_NAME}: [Initialize]: An error occurred while retrieving Android current activity object!");
-                Debug.LogError($"{DEBUG_NAME}: [Initialize]: error content: {ucaoE}");
+                Debug.LogError($"{DEBUG_NAME}: [Initialize]: An error occurred while retrieving Android current activity object: {ucaoE}");
                 return;
             }
 
@@ -71,8 +76,7 @@ namespace SherpaUnityWrapper
                 sherpaOnnx = new AndroidJavaObject(SHERPA_ONNX_PLUGIN_JAVA_CLASS_NAME);
             } catch (Exception swE)
             {
-                Debug.LogError($"{DEBUG_NAME}: [Initialize]: An error occurred while creating SherpaOnnx Java object!");
-                Debug.LogError($"{DEBUG_NAME}: [Initialize]: error content: {swE}");
+                Debug.LogError($"{DEBUG_NAME}: [Initialize]: An error occurred while creating SherpaOnnx Java object: {swE}");
                 return;
             }
 
@@ -100,8 +104,7 @@ namespace SherpaUnityWrapper
             }
             catch (Exception arg4)
             {
-                Debug.LogError($"{DEBUG_NAME}: [Initialize]: An error occurred during plugin setup (setContext or initialize).");
-                Debug.LogError($"{DEBUG_NAME}: [Initialize]: error content: {arg4}");
+                Debug.LogError($"{DEBUG_NAME}: [Initialize]: An error occurred during plugin setup (setContext or initialize): {arg4}");
                 sherpaOnnx = null;
                 return;
             }
@@ -115,8 +118,14 @@ namespace SherpaUnityWrapper
         /// <param name="text">Text whick should be converted to audio and the played.</param>
         public void GenerateAndPlay(int speakerId, float speed, string text)
         {
-            if (string.IsNullOrEmpty(text) || sherpaOnnx == null)
+            if (sherpaOnnx == null)
             {
+                Debug.LogError($"{DEBUG_NAME}: [GenerateAndPlay]: SherpaOnnx object is null");
+                return;
+            }
+            if (string.IsNullOrEmpty(text))
+            {
+                Debug.LogError($"{DEBUG_NAME}: [GenerateAndPlay]: Text for generating is null or empty!");
                 return;
             }
 
@@ -154,29 +163,6 @@ namespace SherpaUnityWrapper
         }
 
         /// <summary>
-        /// Check if audio is stopped at the moment
-        /// </summary>
-        /// <returns>Returns <c>true</c> if audio is stopped</returns>
-        public bool IsStopped()
-        {
-            if (sherpaOnnx == null)
-            {
-                return true;
-            }
-
-            if (debugMode)
-            {
-                Debug.Log($"{DEBUG_NAME}: [IsStopped]: Is audio stopped?");
-            }
-            bool isStopped = sherpaOnnx.Call<bool>("isStopped");
-            if (debugMode)
-            {
-                Debug.Log($"{DEBUG_NAME}: [IsStopped]: stopped? {isStopped}");
-            }
-            return isStopped;
-        }
-
-        /// <summary>
         /// Check if audio is playing at the moment
         /// </summary>
         /// <returns>Returns <c>true</c> if audio is playing</returns>
@@ -184,19 +170,30 @@ namespace SherpaUnityWrapper
         {
             if (sherpaOnnx == null)
             {
-                return true;
+                return false;
             }
 
+            bool isPlaying = sherpaOnnx.Call<bool>("isPlaying");
             if (debugMode)
             {
-                Debug.Log($"{DEBUG_NAME}: [IsPlaying]: Is audio playing?");
+                Debug.Log($"{DEBUG_NAME}: [IsPlaying]: isPlaying? {isPlaying}");
             }
-            bool isStopped = sherpaOnnx.Call<bool>("isStopped");
+            return isPlaying;
+        }
+
+        public int GetAudioDuration()
+        {
+            if (sherpaOnnx == null)
+            {
+                return 0;
+            }
+
+            int duration = sherpaOnnx.Call<int>("getDuration");
             if (debugMode)
             {
-                Debug.Log($"{DEBUG_NAME}: [IsPlaying]: isPlaying? {!isStopped}");
+                Debug.Log($"{DEBUG_NAME}: [GetAudioDuration]: duration: {duration}");
             }
-            return !isStopped;
+            return duration;
         }
 
         public void SetDebugMode(bool debugMode)

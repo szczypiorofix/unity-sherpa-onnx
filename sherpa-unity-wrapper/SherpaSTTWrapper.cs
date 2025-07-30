@@ -16,8 +16,15 @@ namespace SherpaUnityWrapper
         private string lastText = "";
         private bool debugMode = false;
 
-        public SherpaSTTWrapper()
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        public SherpaSTTWrapper() : this(false) { }
+
+        public SherpaSTTWrapper(bool debugMode)
         {
+            this.debugMode = debugMode;
+
             if (debugMode)
             {
                 Debug.Log($"{DEBUG_NAME}: SherpaSTTWrapper constructor called.");
