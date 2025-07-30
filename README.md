@@ -8,7 +8,7 @@ Sherpa ONNX wrapper for Unity. Tested with
 
 
 ## Disclaimer
-All code from Android (sherpa-android/SherpaOnnxPlugin/src/main/java/com/k2fa/sherap/onnx) was rewrited for Java but originally comes from [Sherpa ONNX Repository](https://github.com/k2-fsa/sherpa-onnx).
+All code from Android (sherpa-android/SherpaOnnxPlugin/src/main/java/com/k2fa/sherpa/onnx) was rewrited for Java but originally comes from [Sherpa ONNX Repository](https://github.com/k2-fsa/sherpa-onnx).
 I just rewrited the code for Java and better understanding (for me), so generally the credits goes not for me.
 
 ## Licerse MIT
