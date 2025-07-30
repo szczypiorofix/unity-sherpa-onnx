@@ -1,5 +1,5 @@
 # unity-sherpa-onnx
-Sherpa ONNX wrapper for Unity. Tested with 
+STT and TTS modules for Android with Unity (C#) wrapper.
 
 ## Installation & Usage
 - run ```build.bat``` script for Windows
